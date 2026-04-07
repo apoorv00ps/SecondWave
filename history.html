@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecondWave — My Activity</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="auth-loader">
+  <div class="loader-ring"></div>
+  <span style="color:var(--muted);font-size:0.88rem;">Loading…</span>
+</div>
+
+<!-- Notification Dropdown -->
+<div id="notif-dropdown" class="dropdown-panel notif-dropdown" style="position:fixed;top:calc(58px + 6px);right:1rem;">
+  <div class="notif-hdr">🔔 Notifications
+    <button onclick="document.getElementById('notif-dropdown').classList.remove('open')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem;">×</button>
+  </div>
+  <div class="notif-list" id="notif-list"><div class="notif-empty">No notifications yet</div></div>
+</div>
+
+<!-- Navbar -->
+<nav id="navbar">
+  <a href="marketplace.html" class="navbar-brand">Second<span>Wave</span></a>
+  <div class="navbar-actions">
+    <button class="btn btn-primary btn-sm" onclick="location.href='give.html'">+ Give</button>
+    <button class="nav-icon-btn" id="notif-btn" data-dropdown-trigger="notif-dropdown" title="Notifications">
+      🔔<span class="notif-badge" id="notif-badge">0</span>
+    </button>
+    <button class="nav-icon-btn" style="color:var(--accent);" title="History">🕐</button>
+    <div style="position:relative;">
+      <button class="nav-icon-btn" id="profile-btn" data-dropdown-trigger="profile-dropdown">👤</button>
+      <div id="profile-dropdown" class="dropdown-panel profile-dropdown">
+        <div style="padding:0.7rem 1rem;border-bottom:1px solid var(--border);font-size:0.85rem;">
+          <strong id="pd-name" style="display:block;"></strong>
+          <span id="pd-email" style="color:var(--muted);font-size:0.78rem;"></span>
+        </div>
+        <a href="give.html">📦 List an Item</a>
+        <a href="#" id="signout-btn" class="danger">🚪 Sign Out</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="container" style="padding-top:2rem;padding-bottom:5rem;">
+
+    <a href="marketplace.html" style="color:var(--muted);font-size:0.85rem;">← Marketplace</a>
+    <h1 style="font-size:1.9rem;margin-top:0.5rem;margin-bottom:0.3rem;">My Activity</h1>
+    <p style="color:var(--muted);font-size:0.88rem;margin-bottom:2rem;">Manage your listings and track your interactions</p>
+
+    <!-- Stats -->
+    <div class="stat-row" id="stat-row">
+      <div class="stat-card"><div class="stat-num" id="st-total">—</div><div class="stat-label">My listings</div></div>
+      <div class="stat-card"><div class="stat-num" id="st-active">—</div><div class="stat-label">Available</div></div>
+      <div class="stat-card"><div class="stat-num" id="st-sold">—</div><div class="stat-label">Sold / Rented</div></div>
+      <div class="stat-card"><div class="stat-num" id="st-reqs">—</div><div class="stat-label">Requests sent</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-bar-btn active" data-tab-btn="listings" data-tab-group="hist">📦 My Listings</button>
+      <button class="tab-bar-btn" data-tab-btn="requests" data-tab-group="hist">📩 Requests Sent</button>
+      <button class="tab-bar-btn" data-tab-btn="received" data-tab-group="hist">📥 Requests Received</button>
+    </div>
+
+    <!-- My Listings panel -->
+    <div data-tab-panel="listings" data-tab-group="hist" class="active">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;">
+        <button class="btn btn-primary btn-sm" onclick="location.href='give.html'">+ New listing</button>
+      </div>
+      <div id="my-listings-wrap"></div>
+    </div>
+
+    <!-- Requests Sent panel -->
+    <div data-tab-panel="requests" data-tab-group="hist">
+      <div id="sent-requests-wrap"></div>
+    </div>
+
+    <!-- Requests Received panel -->
+    <div data-tab-panel="received" data-tab-group="hist">
+      <div id="recv-requests-wrap"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Character watchers handled by core.js -->
+<script type="module">
+  import { 
+    requireAuth, signOutUser, onMyListings, updateListing, deleteListing, 
+    onMyRequests, onRequestsReceived, onNotifications, markAllNotifsRead, 
+    timeAgo, showToast, updateNavBadge 
+  } from './core.js';
+
+  let currentUser = null;
+  let myListings  = [];
+  let myRequests  = [];
+  let recvreqs    = [];
+
+  // ── Auth guard ──────────────────────────────────────
+  requireAuth((user) => {
+    currentUser = user;
+    document.getElementById('auth-loader').style.display = 'none';
+
+    // User info in profile dropdown
+    document.getElementById('pd-name').textContent  = user.displayName || '';
+    document.getElementById('pd-email').textContent = user.email || '';
+
+    // Start listeners
+    onMyListings(user.uid, (listings) => {
+      myListings = listings;
+      renderMyListings();
+      // Stats
+      document.getElementById('st-total').textContent  = listings.length;
+      document.getElementById('st-active').textContent = listings.filter(l => l.status === 'available').length;
+      document.getElementById('st-sold').textContent   = listings.filter(l => l.status !== 'available').length;
+    });
+
+    onMyRequests(user.uid, (reqs) => {
+      myRequests = reqs;
+      document.getElementById('st-reqs').textContent = reqs.length;
+      renderSentRequests();
+    });
+
+    onRequestsReceived(user.uid, (reqs) => {
+      recvreqs = reqs;
+      renderRecvRequests();
+    });
+
+    // Notifications
+    onNotifications(user.uid, (notifs) => {
+      updateNavBadge(notifs.filter(n => !n.read).length);
+      const list = document.getElementById('notif-list');
+      if (notifs.length === 0) { list.innerHTML = '<div class="notif-empty">No notifications yet 🌿</div>'; return; }
+      list.innerHTML = notifs.slice(0,10).map(n => `
+        <div class="notif-item ${n.read ? '' : 'unread'}">
+          <div class="notif-dot ${n.read ? 'read' : ''}"></div>
+          <div class="notif-body">
+            <div class="notif-text">${n.text}</div>
+            <div class="notif-time">${timeAgo(n.createdAt)}</div>
+          </div>
+        </div>`).join('');
+    });
+
+    document.getElementById('notif-btn').addEventListener('click', () => markAllNotifsRead(user.uid));
+    document.getElementById('signout-btn').addEventListener('click', (e) => { e.preventDefault(); signOutUser(); });
+  });
+
+  // ── My Listings ─────────────────────────────────────
+  function renderMyListings() {
+    const wrap = document.getElementById('my-listings-wrap');
+    if (!myListings.length) {
+      wrap.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <h3>No listings yet</h3>
+          <p style="margin-top:0.4rem;">List your first item and start sharing</p>
+          <button class="btn btn-primary" style="margin-top:1rem;" onclick="location.href='give.html'">List something →</button>
+        </div>`;
+      return;
+    }
+
+    wrap.innerHTML = myListings.map(l => {
+      const thumbHtml = l.images && l.images.length
+        ? `<img src="${l.images[0]}" style="width:80px;height:80px;object-fit:cover;" alt="${l.title}" />`
+        : `<span style="font-size:2rem;">${l.emoji || '📦'}</span>`;
+
+      const statusClass = l.status === 'available' ? 'status-available' : l.status === 'sold' ? 'status-sold' : 'status-rented';
+      const statusLabel = l.status === 'available' ? '● Available' : l.status === 'sold' ? '● Sold' : '● On Rent';
+
+      return `
+        <div class="manage-card">
+          <div class="manage-thumb">${thumbHtml}</div>
+          <div class="manage-body">
+            <div class="manage-info">
+              <strong>${l.title}</strong>
+              <small>
+                ${l.price} · ${l.type === 'rent' ? '🔄 Rent' : '🛒 Sale'} ·
+                <span class="status-chip ${statusClass}" style="font-size:0.7rem;padding:2px 7px;">${statusLabel}</span>
+              </small>
+              <small style="display:block;margin-top:3px;">📍 ${l.location} · ${timeAgo(l.createdAt)}</small>
+            </div>
+            <div class="manage-actions">
+              ${l.status !== 'available' ? `<button class="btn btn-sm btn-ghost" onclick="changeStatus('${l.id}','available')">Set Available</button>` : ''}
+              ${l.status !== 'sold' && l.type === 'sell' ? `<button class="btn btn-sm btn-danger" style="font-size:0.76rem;" onclick="changeStatus('${l.id}','sold')">Mark Sold</button>` : ''}
+              ${l.status !== 'rented' && l.type === 'rent' ? `<button class="btn btn-sm" style="background:var(--accent-bg);color:var(--accent-lt);font-size:0.76rem;border:1px solid rgba(224,120,64,0.3);" onclick="changeStatus('${l.id}','rented')">Mark Rented</button>` : ''}
+              <button class="btn btn-sm btn-danger" onclick="doDelete('${l.id}')">🗑️</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  window.changeStatus = async function(id, status) {
+    try {
+      await updateListing(id, { status });
+      showToast(`Marked as "${status}"`, 'success');
+    } catch (err) { showToast('Error: ' + err.message, 'error'); }
+  };
+
+  window.doDelete = async function(id) {
+    if (!confirm('Delete this listing permanently?')) return;
+    try {
+      await deleteListing(id);
+      showToast('Listing deleted', 'info');
+    } catch (err) { showToast('Error: ' + err.message, 'error'); }
+  };
+
+  // ── Requests Sent ────────────────────────────────────
+  function renderSentRequests() {
+    const wrap = document.getElementById('sent-requests-wrap');
+    if (!myRequests.length) {
+      wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">📩</div><h3>No requests sent</h3><p style="margin-top:0.4rem;">Browse listings and send your first request</p></div>'; return;
+    }
+    wrap.innerHTML = myRequests.map(r => `
+      <div class="history-item">
+        <div class="hist-icon">📩</div>
+        <div class="hist-desc">
+          <strong>Request for "${r.listingTitle || 'a listing'}"</strong>
+          <small>
+            ${r.duration ? `Duration: ${r.duration} · ` : ''} 
+            ${r.totalPrice ? `Total: ${r.totalPrice} · ` : ''} 
+            ${timeAgo(r.createdAt)}
+          </small>
+        </div>
+        <span class="tag tag-accent">Pending</span>
+      </div>`).join('');
+  }
+
+  // ── Requests Received ─────────────────────────────────
+  function renderRecvRequests() {
+    const wrap = document.getElementById('recv-requests-wrap');
+    if (!recvreqs.length) {
+      wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">📥</div><h3>No requests yet</h3><p style="margin-top:0.4rem;">When someone requests your listing, it appears here</p></div>'; return;
+    }
+    wrap.innerHTML = recvreqs.map(r => `
+      <div class="history-item">
+        <div class="hist-icon">${r.fromPhoto ? `<img src="${r.fromPhoto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" />` : '👤'}</div>
+        <div class="hist-desc">
+          <strong>${r.fromName || 'Someone'} requested "${r.listingTitle || 'your listing'}"</strong>
+          <small>
+            ${r.duration ? `Duration: ${r.duration} · ` : ''} 
+            ${r.totalPrice ? `Total: ${r.totalPrice} · ` : ''} 
+            ${timeAgo(r.createdAt)}
+          </small>
+        </div>
+        <span class="tag tag-green">New</span>
+      </div>`).join('');
+  }
+</script>
+
+<div id="watcher-row" aria-hidden="true">
+  <div class="watcher">
+    <svg viewBox="0 0 110 66" width="148" height="90" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+      <ellipse cx="55" cy="66" rx="52" ry="52" fill="#4a9b7f"/>
+      <ellipse cx="38" cy="28" rx="11" ry="7" fill="rgba(255,255,255,0.14)" transform="rotate(-20,38,28)"/>
+      <circle cx="33" cy="43" r="11" fill="white"/>
+      <circle cx="33" cy="43" r="6.5" fill="#1c1814" data-pupil data-eye-cx="33" data-eye-cy="43" data-max-offset="4.5"/>
+      <circle cx="36" cy="40" r="2" fill="rgba(255,255,255,0.7)"/>
+      <rect x="52" y="33" width="24" height="17" rx="4" fill="white"/>
+      <rect x="57" y="37" width="14" height="10" rx="2" fill="#1c1814" data-pupil data-pupil-type="rect" data-base-x="57" data-base-y="37" data-eye-cx="64" data-eye-cy="41.5" data-max-offset="4"/>
+      <rect x="72" y="34" width="3" height="2" rx="1" fill="rgba(255,255,255,0.7)"/>
+    </svg>
+  </div>
+  <div class="watcher">
+    <svg viewBox="0 0 100 100" width="130" height="130" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+      <circle cx="50" cy="50" r="47" fill="#e07840"/>
+      <ellipse cx="34" cy="26" rx="13" ry="9" fill="rgba(255,255,255,0.14)" transform="rotate(-25,34,26)"/>
+      <circle cx="33" cy="46" r="12" fill="white"/>
+      <circle cx="33" cy="46" r="7" fill="#1c1814" data-pupil data-eye-cx="33" data-eye-cy="46" data-max-offset="4.5"/>
+      <circle cx="37" cy="42" r="2.5" fill="rgba(255,255,255,0.7)"/>
+      <rect x="52" y="35" width="22" height="17" rx="4" fill="white"/>
+      <rect x="56" y="39" width="14" height="10" rx="2" fill="#1c1814" data-pupil data-pupil-type="rect" data-base-x="56" data-base-y="39" data-eye-cx="63" data-eye-cy="44" data-max-offset="3.5"/>
+    </svg>
+  </div>
+  <div class="watcher">
+    <svg viewBox="0 0 100 92" width="115" height="106" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+      <polygon points="50,4 4,92 96,92" fill="#d4a843"/>
+      <polygon points="50,4 38,36 62,36" fill="rgba(255,255,255,0.13)"/>
+      <circle cx="34" cy="70" r="11" fill="white"/>
+      <circle cx="34" cy="70" r="6.5" fill="#1c1814" data-pupil data-eye-cx="34" data-eye-cy="70" data-max-offset="4"/>
+      <circle cx="38" cy="66" r="2" fill="rgba(255,255,255,0.7)"/>
+      <rect x="53" y="61" width="20" height="15" rx="3" fill="white"/>
+      <rect x="57" y="65" width="12" height="8" rx="2" fill="#1c1814" data-pupil data-pupil-type="rect" data-base-x="57" data-base-y="65" data-eye-cx="63" data-eye-cy="69" data-max-offset="3.5"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Character watchers handled by core.js -->
+</body>
+</html>

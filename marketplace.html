@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecondWave — Marketplace</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .market-layout { display: grid; grid-template-columns: 240px 1fr; gap: 2rem; align-items: start; margin-top: 1.5rem; }
+    @media (max-width: 850px) { .market-layout { grid-template-columns: 1fr; } .filter-sidebar { display: none; } }
+    .results-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 8px; }
+    .search-section { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1.5rem 0; }
+  </style>
+</head>
+<body>
+
+<div id="auth-loader">
+  <div class="loader-ring"></div>
+</div>
+
+<!-- Notification Dropdown -->
+<div id="notif-dropdown" class="dropdown-panel notif-dropdown" style="position:fixed;top:calc(58px + 6px);right:1rem;">
+  <div class="notif-hdr">🔔 Notifications
+    <button onclick="document.getElementById('notif-dropdown').classList.remove('open')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem;">×</button>
+  </div>
+  <div class="notif-list" id="notif-list"><div class="notif-empty">No notifications yet</div></div>
+</div>
+
+<!-- Navbar -->
+<nav id="navbar">
+  <a href="marketplace.html" class="navbar-brand">Second<span>Wave</span></a>
+  <div class="navbar-actions">
+    <button class="btn btn-primary btn-sm" onclick="location.href='give.html'">+ Give</button>
+    <button class="nav-icon-btn" id="notif-btn" data-dropdown-trigger="notif-dropdown" title="Notifications">
+      🔔<span class="notif-badge" id="notif-badge">0</span>
+    </button>
+    <button class="nav-icon-btn" onclick="location.href='history.html'" title="History">🕐</button>
+    <div style="position:relative;">
+      <button class="nav-icon-btn" id="profile-btn" data-dropdown-trigger="profile-dropdown">
+        <img src="" alt="👤" id="nav-avatar" width="28" height="28" style="border-radius:50%;object-fit:cover;display:none;" />
+        <span id="nav-avatar-fallback">👤</span>
+      </button>
+      <div id="profile-dropdown" class="dropdown-panel profile-dropdown">
+        <div style="padding:0.7rem 1rem;border-bottom:1px solid var(--border);font-size:0.85rem;">
+          <strong id="pd-name" style="display:block;"></strong>
+          <span id="pd-email" style="color:var(--muted);font-size:0.78rem;"></span>
+        </div>
+        <a href="history.html">🕐 My Activity</a>
+        <a href="give.html">📦 List an Item</a>
+        <a href="#" id="signout-btn" class="danger">🚪 Sign Out</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <!-- Header: Stats & Welcome -->
+  <div class="home-header">
+    <div class="container">
+      <div class="home-header-inner">
+        <div class="user-greet">
+          <div class="user-avatar" id="hdr-avatar">👤</div>
+          <div class="user-greet-text"><strong id="hdr-name">Welcome back</strong><small>Find what you need, share what you don't.</small></div>
+        </div>
+        <div class="stat-row" style="margin-top:0;background:transparent;padding:0;box-shadow:none;border:none;">
+          <div class="stat-card" style="padding:0.5rem 1rem;background:rgba(255,255,255,0.05);"><div class="stat-num" id="st-total">—</div><div class="stat-label">Total</div></div>
+          <div class="stat-card" style="padding:0.5rem 1rem;background:rgba(255,255,255,0.05);"><div class="stat-num" id="st-mine">—</div><div class="stat-label">Mine</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Hero -->
+  <div class="search-section">
+    <div class="container">
+      <div class="search-row">
+        <div>
+          <label class="form-label">Item name</label>
+          <input type="text" id="s-name" placeholder="camera, jacket, table…" oninput="applyFilters()" />
+        </div>
+        <div>
+          <label class="form-label">Location</label>
+          <input type="text" id="s-loc" placeholder="city or area…" oninput="applyFilters()" />
+        </div>
+        <div>
+          <label class="form-label">Category</label>
+          <select id="s-cat" onchange="applyFilters()">
+            <option value="">All categories</option>
+          </select>
+        </div>
+        <button class="btn btn-primary search-btn" onclick="applyFilters()">🔍 Search</button>
+      </div>
+
+      <div style="display:flex;gap:7px;margin-top:1.1rem;flex-wrap:wrap;">
+        <span class="cat-scroll-pill active" id="f-all"  onclick="setTypeFilter('all')">🌐 All</span>
+        <span class="cat-scroll-pill" id="f-rent" onclick="setTypeFilter('rent')">🔄 Rent</span>
+        <span class="cat-scroll-pill" id="f-sell" onclick="setTypeFilter('sell')">🛒 Buy</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="market-layout">
+      <!-- Sidebar -->
+      <aside class="filter-sidebar">
+        <div class="filter-group">
+          <div class="filter-group-title">Browse By Category</div>
+          <div id="cat-filter-list">
+            <div class="filter-chip active" data-cat="" onclick="setCatFilter('')">🌐 All Categories</div>
+          </div>
+        </div>
+        <div class="filter-group">
+          <div class="filter-group-title">Sort By</div>
+          <select id="sort-sel" onchange="applyFilters()" style="font-size:0.85rem;padding:0.5rem;">
+            <option value="recent">Newest first</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+          </select>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <div>
+        <div class="results-bar">
+          <span id="results-count" style="font-weight:600;font-size:0.92rem;color:var(--text-2);">Loading listings…</span>
+        </div>
+        <div class="listing-grid" id="listing-grid"></div>
+        <div class="empty-state" id="empty-state" style="display:none;">
+          <div class="empty-icon">🌱</div>
+          <h3>Nothing found here</h3>
+          <p style="margin-top:0.4rem;">Try adjusting your filters or search term.</p>
+          <button class="btn btn-primary" style="margin-top:1rem;" onclick="location.href='give.html'">List an item instead →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import { 
+    onAuth, signOutUser, onListings, onNotifications, markAllNotifsRead, CATEGORIES, timeAgo 
+  } from './core.js';
+
+  let currentUser = null;
+  let allListings = [];
+  let typeFilter  = 'all';
+  let catFilter   = '';
+
+  onAuth(user => {
+    currentUser = user;
+    document.getElementById('auth-loader').style.display = 'none';
+    if (user) {
+      setupUser(user);
+      loadNotifications(user.uid);
+    }
+    loadListings();
+    buildCategoryUI();
+  });
+
+  document.getElementById('signout-btn').addEventListener('click', (e) => { e.preventDefault(); signOutUser(); });
+
+  function setupUser(user) {
+    document.getElementById('hdr-name').textContent = 'Hey, ' + (user.displayName?.split(' ')[0] || 'friend') + ' 👋';
+    document.getElementById('pd-name').textContent  = user.displayName || '';
+    document.getElementById('pd-email').textContent = user.email || '';
+    if (user.photoURL) {
+      document.getElementById('nav-avatar').src = user.photoURL;
+      document.getElementById('nav-avatar').style.display = 'block';
+      document.getElementById('nav-avatar-fallback').style.display = 'none';
+      document.getElementById('hdr-avatar').innerHTML = `<img src="${user.photoURL}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;" />`;
+    }
+  }
+
+  function loadListings() {
+    onListings(listings => {
+      allListings = listings;
+      updateStats();
+      applyFilters();
+    });
+  }
+
+  function updateStats() {
+    const mine = currentUser ? allListings.filter(l => l.postedBy === currentUser.uid) : [];
+    document.getElementById('st-total').textContent = allListings.length;
+    document.getElementById('st-mine').textContent = mine.length;
+  }
+
+  function buildCategoryUI() {
+    // Top select
+    const sel = document.getElementById('s-cat');
+    sel.innerHTML += CATEGORIES.map(c => `<option value="${c.label}">${c.icon} ${c.label}</option>`).join('');
+    
+    // Sidebar list
+    const list = document.getElementById('cat-filter-list');
+    list.innerHTML += CATEGORIES.map(c => `
+      <div class="filter-chip" data-cat="${c.label}" onclick="setCatFilter('${c.label}')">
+        ${c.icon} ${c.label}
+      </div>
+    `).join('');
+  }
+
+  window.setTypeFilter = function(t) {
+    typeFilter = t;
+    ['all','rent','sell'].forEach(id => document.getElementById('f-'+id).classList.toggle('active', id === t));
+    applyFilters();
+  };
+
+  window.setCatFilter = function(cat) {
+    catFilter = cat;
+    document.querySelectorAll('.filter-chip').forEach(el => el.classList.toggle('active', el.dataset.cat === cat));
+    document.getElementById('s-cat').value = cat;
+    applyFilters();
+  };
+
+  window.applyFilters = function() {
+    const name = document.getElementById('s-name').value.toLowerCase();
+    const loc  = document.getElementById('s-loc').value.toLowerCase();
+    const cat  = document.getElementById('s-cat').value;
+    const sort = document.getElementById('sort-sel').value;
+
+    let list = allListings.filter(l => {
+      if (l.status !== 'available') return false;
+      if (typeFilter !== 'all' && l.type !== typeFilter) return false;
+      if (catFilter && l.category !== catFilter) return false;
+      if (cat && l.category !== cat) return false;
+      if (name && !l.title.toLowerCase().includes(name)) return false;
+      if (loc && !l.location.toLowerCase().includes(loc)) return false;
+      return true;
+    });
+
+    if (sort === 'recent')     list.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+    if (sort === 'price-asc')  list.sort((a,b) => (a.priceRaw||0) - (b.priceRaw||0));
+    if (sort === 'price-desc') list.sort((a,b) => (b.priceRaw||0) - (a.priceRaw||0));
+
+    renderGrid(list);
+  };
+
+  function renderGrid(list) {
+    const grid = document.getElementById('listing-grid');
+    const empty = document.getElementById('empty-state');
+    document.getElementById('results-count').textContent = `${list.length} listing${list.length!==1?'s':''} available`;
+
+    if (list.length === 0) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+
+    grid.innerHTML = list.map(l => `
+      <div class="listing-card fade-up" onclick="location.href='product.html?id=${l.id}'">
+        <div class="listing-card-img">
+          ${l.images?.length ? `<img src="${l.images[0]}" alt="${l.title}" style="width:100%;height:100%;object-fit:cover;" />` : `<span style="font-size:3.5rem;">${l.emoji||'📦'}</span>`}
+        </div>
+        <div class="listing-card-body">
+          <div class="listing-card-title">${l.title}</div>
+          <div class="listing-card-meta">
+            📍 ${l.location}
+            <span class="tag tag-${l.type==='rent'?'accent':'green'}">${l.type==='rent'?'🔄 Rent':'🛒 Buy'}</span>
+          </div>
+          <div class="listing-card-price">${l.price}</div>
+          <div class="listing-card-footer">
+            <span class="status-chip status-available">● Available</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function loadNotifications(uid) {
+    onNotifications(uid, (notifs) => {
+      const list = document.getElementById('notif-list');
+      const badgeCount = notifs.filter(n => !n.read).length;
+      document.getElementById('notif-badge').textContent = badgeCount;
+      document.getElementById('notif-badge').style.display = badgeCount > 0 ? 'flex' : 'none';
+      
+      if (notifs.length === 0) { list.innerHTML = '<div class="notif-empty">No notifications yet 🌿</div>'; return; }
+      list.innerHTML = notifs.slice(0,10).map(n => `
+        <div class="notif-item ${n.read ? '' : 'unread'}">
+          <div class="notif-dot ${n.read ? 'read' : ''}"></div>
+          <div class="notif-body">
+            <div class="notif-text">${n.text}</div>
+            <div class="notif-time">${timeAgo(n.createdAt)}</div>
+          </div>
+        </div>`).join('');
+    });
+    document.getElementById('notif-btn').addEventListener('click', () => markAllNotifsRead(uid));
+  }
+</script>
+
+<div id="watcher-row" aria-hidden="true" style="position:fixed;bottom:-20px;right:2rem;z-index:1000;display:flex;gap:1.5rem;pointer-events:none;">
+    <div class="watcher">
+      <svg viewBox="0 0 110 66" width="90" height="55" overflow="visible">
+        <ellipse cx="55" cy="66" rx="52" ry="52" fill="#4a9b7f"/>
+        <circle cx="33" cy="43" r="11" fill="white"/>
+        <circle cx="33" cy="43" r="6.5" fill="#1c1814" data-pupil data-eye-cx="33" data-eye-cy="43" data-max-offset="4.5"/>
+        <rect x="52" y="33" width="24" height="17" rx="4" fill="white"/>
+        <rect x="57" y="37" width="14" height="10" rx="2" fill="#1c1814" data-pupil data-pupil-type="rect" data-base-x="57" data-base-y="37" data-eye-cx="64" data-eye-cy="41.5" data-max-offset="4"/>
+      </svg>
+    </div>
+    <div class="watcher">
+      <svg viewBox="0 0 100 100" width="80" height="80" overflow="visible">
+        <circle cx="50" cy="50" r="47" fill="#e07840"/>
+        <circle cx="33" cy="46" r="12" fill="white"/>
+        <circle cx="33" cy="46" r="7" fill="#1c1814" data-pupil data-eye-cx="33" data-eye-cy="46" data-max-offset="4.5"/>
+        <rect x="52" y="35" width="22" height="17" rx="4" fill="white"/>
+        <rect x="56" y="39" width="14" height="10" rx="2" fill="#1c1814" data-pupil data-pupil-type="rect" data-base-x="56" data-base-y="39" data-eye-cx="63" data-eye-cy="44" data-max-offset="3.5"/>
+      </svg>
+    </div>
+</div>
+
+</body>
+</html>

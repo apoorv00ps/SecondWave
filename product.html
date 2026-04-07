@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecondWave — Item Details</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .prod-wrap { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+    .prod-grid { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start; }
+    @media (max-width: 800px) { .prod-grid { grid-template-columns: 1fr; } }
+
+    .prod-images { background: var(--surface); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+    .main-img-box { aspect-ratio: 4/3; background: var(--surface-2); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .main-img-box img { width: 100%; height: 100%; object-fit: cover; }
+    .emoji-huge { font-size: 6rem; filter: grayscale(0.2); }
+
+    .thumbs { display: flex; gap: 8px; padding: 10px; overflow-x: auto; border-top: 1px solid var(--border); }
+    .thumb { width: 60px; height: 60px; border-radius: 6px; object-fit: cover; cursor: pointer; border: 2px solid transparent; opacity: 0.7; transition: 0.2s; }
+    .thumb:hover { opacity: 1; }
+    .thumb.active { border-color: var(--accent); opacity: 1; }
+
+    .prod-info { padding: 0.5rem 0; }
+    .prod-sidebar { position: sticky; top: 80px; }
+    .action-card { 
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); 
+      padding: 1.5rem; box-shadow: var(--shadow-sm);
+    }
+    
+    .duration-pills { display: flex; gap: 8px; margin: 1rem 0; }
+    .dur-pill { 
+      flex: 1; padding: 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm); 
+      text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: 0.2s;
+    }
+    .dur-pill.active { background: var(--accent); color: white; border-color: var(--accent); }
+    
+    .price-total-box { 
+      margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border);
+      display: flex; justify-content: space-between; align-items: flex-end;
+    }
+    .total-label { font-size: 0.82rem; color: var(--muted); margin-bottom: 2px; }
+    .total-val { font-size: 1.6rem; font-weight: 700; color: var(--gold); font-family: 'Playfair Display', serif; }
+
+    .owner-mini { 
+      display: flex; align-items: center; gap: 10px; margin-top: 1.5rem; 
+      padding: 0.8rem; background: var(--surface-2); border-radius: var(--radius-sm);
+    }
+  </style>
+</head>
+<body>
+
+<div id="auth-loader">
+  <div class="loader-ring"></div>
+</div>
+
+<nav id="navbar">
+  <a href="marketplace.html" class="navbar-brand">Second<span>Wave</span></a>
+  <div class="navbar-actions">
+    <button class="nav-icon-btn" onclick="location.href='marketplace.html'" title="Home">🏠</button>
+    <button class="nav-icon-btn" onclick="location.href='history.html'" title="History">🕐</button>
+    <button class="nav-icon-btn" id="signout-icon" title="Sign out">👤</button>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="prod-wrap">
+    <a href="javascript:history.back()" style="color:var(--muted);font-size:0.85rem;display:inline-block;margin-bottom:1rem;">← Back</a>
+    
+    <div id="prod-content" class="prod-grid" style="display:none;">
+      <!-- Left: Content -->
+      <div class="prod-info">
+        <div class="prod-images">
+          <div class="main-img-box" id="main-img-box"></div>
+          <div class="thumbs" id="thumbs-box"></div>
+        </div>
+
+        <div style="margin-top:2rem;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.8rem;">
+            <span id="p-tag" class="tag"></span>
+            <span id="p-cat" class="tag"></span>
+          </div>
+          <h1 id="p-title" style="font-size:2.2rem;line-height:1.2;margin-bottom:1rem;"></h1>
+          <div id="p-desc" style="font-size:1.05rem;line-height:1.7;color:var(--text-2);white-space:pre-wrap;"></div>
+          
+          <div style="margin-top:2rem;display:flex;flex-wrap:wrap;gap:15px;color:var(--muted);font-size:0.9rem;">
+            <span id="p-loc">📍 </span>
+            <span id="p-time">🕒 </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Sidebar -->
+      <aside class="prod-sidebar">
+        <div class="action-card">
+          <div id="side-price-label" style="font-size:0.9rem;color:var(--muted);margin-bottom:4px;"></div>
+          <div id="p-base-price" style="font-size:1.8rem;font-weight:700;color:var(--gold);font-family:'Playfair Display',serif;"></div>
+          
+          <div id="rent-controls" style="display:none;margin-top:1.5rem;">
+            <label class="form-label">Rental Duration</label>
+            <div class="duration-pills">
+              <div class="dur-pill active" onclick="setDuration('hour')">Hour</div>
+              <div class="dur-pill" onclick="setDuration('day')">Day</div>
+              <div class="dur-pill" onclick="setDuration('month')">Month</div>
+            </div>
+            
+            <div class="form-group">
+              <input type="number" id="dur-qty" value="1" min="1" oninput="calcTotal()" style="text-align:center;font-size:1.1rem;font-weight:600;" />
+              <div style="text-align:center;font-size:0.75rem;color:var(--muted);margin-top:5px;" id="dur-unit-label">hours</div>
+            </div>
+          </div>
+
+          <div class="price-total-box" id="total-box" style="display:none;">
+            <div><div class="total-label">Total Amount</div></div>
+            <div class="total-val" id="total-val">₹0</div>
+          </div>
+
+          <button id="req-btn" class="btn btn-primary btn-full btn-lg" style="margin-top:1.5rem;" onclick="handleRequest()">
+            📩 Send Request
+          </button>
+          
+          <div id="owner-box" class="owner-mini">
+            <div id="owner-img"></div>
+            <div>
+              <div id="owner-name" style="font-weight:600;font-size:0.88rem;"></div>
+              <div style="font-size:0.72rem;color:var(--muted);">Verified Owner</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Error state -->
+    <div id="prod-error" style="display:none;text-align:center;padding:4rem 0;">
+      <div style="font-size:4rem;margin-bottom:1rem;">🛰️</div>
+      <h3>Item not found</h3>
+      <p style="color:var(--muted);margin-top:0.5rem;">The listing might have been removed or is no longer available.</p>
+      <button class="btn btn-primary" style="margin-top:1.5rem;" onclick="location.href='marketplace.html'">Back to Marketplace</button>
+    </div>
+  </div>
+</main>
+
+<!-- character-watchers handled by core.js -->
+<script type="module">
+  import { 
+    onAuth, signOutUser, fetchListing, createRequest, hasRequested, createNotification, calculateRates, formatPrice, timeAgo, showToast 
+  } from './core.js';
+
+  let currentUser = null;
+  let listing     = null;
+  let duration    = 'hour'; // 'hour', 'day', 'month'
+  let listingId   = new URLSearchParams(location.search).get('id');
+
+  onAuth(user => {
+    currentUser = user;
+    document.getElementById('auth-loader').style.display = 'none';
+    if (!listingId) { showErr(); return; }
+    loadListing();
+  });
+
+  document.getElementById('signout-icon').addEventListener('click', signOutUser);
+
+  async function loadListing() {
+    try {
+      listing = await fetchListing(listingId);
+      if (!listing) { showErr(); return; }
+      renderListing();
+    } catch (err) {
+      console.error(err);
+      showErr();
+    }
+  }
+
+  function showErr() {
+    document.getElementById('prod-content').style.display = 'none';
+    document.getElementById('prod-error').style.display = 'block';
+  }
+
+  function renderListing() {
+    document.getElementById('prod-content').style.display = 'grid';
+    document.title = `${listing.title} — SecondWave`;
+    
+    // Images
+    const mainBox = document.getElementById('main-img-box');
+    const thumbBox = document.getElementById('thumbs-box');
+    if (listing.images && listing.images.length > 0) {
+      mainBox.innerHTML = `<img src="${listing.images[0]}" id="main-img" />`;
+      thumbBox.innerHTML = listing.images.map((img, i) => `
+        <img src="${img}" class="thumb ${i===0?'active':''}" onclick="setMainImg('${img}', this)" />
+      `).join('');
+    } else {
+      mainBox.innerHTML = `<div class="emoji-huge">${listing.emoji || '📦'}</div>`;
+      thumbBox.style.display = 'none';
+    }
+
+    // Details
+    document.getElementById('p-title').textContent = listing.title;
+    document.getElementById('p-desc').textContent = listing.description || 'No description provided.';
+    document.getElementById('p-tag').className = `tag tag-${listing.type==='rent'?'accent':'green'}`;
+    document.getElementById('p-tag').textContent = listing.type==='rent'?'🔄 For Rent':'🛒 For Sale';
+    document.getElementById('p-cat').textContent = `📦 ${listing.category}`;
+    document.getElementById('p-loc').textContent = `📍 ${listing.location} ${listing.radius?`(${listing.radius}km)`:''}`;
+    document.getElementById('p-time').textContent = `🕒 Posted ${timeAgo(listing.createdAt)}`;
+
+    // Sidebar
+    const sideLabel = document.getElementById('side-price-label');
+    const sidePrice = document.getElementById('p-base-price');
+    if (listing.type === 'rent') {
+      sideLabel.textContent = 'Price per hour';
+      sidePrice.textContent = formatPrice(listing.hourlyRate || listing.priceRaw, 'hr');
+      document.getElementById('rent-controls').style.display = 'block';
+      document.getElementById('total-box').style.display = 'flex';
+      calcTotal();
+    } else {
+      sideLabel.textContent = 'Selling Price';
+      sidePrice.textContent = formatPrice(listing.priceRaw);
+      document.getElementById('rent-controls').style.display = 'none';
+      document.getElementById('total-box').style.display = 'none';
+    }
+
+    // Owner
+    document.getElementById('owner-name').textContent = listing.posterName;
+    document.getElementById('owner-img').innerHTML = listing.posterPhoto 
+      ? `<img src="${listing.posterPhoto}" style="width:36px;height:36px;border-radius:50%;" />`
+      : `<div style="width:36px;height:36px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;justify-content:center;">👤</div>`;
+
+    // Auth check for requested
+    checkAlreadyRequested();
+  }
+
+  async function checkAlreadyRequested() {
+    if (!currentUser) return;
+    const already = await hasRequested(currentUser.uid, listingId);
+    if (already) {
+      const btn = document.getElementById('req-btn');
+      btn.disabled = true;
+      btn.textContent = '✓ Request Sent';
+      btn.style.background = 'var(--green)';
+    }
+  }
+
+  window.setMainImg = function(src, el) {
+    document.getElementById('main-img').src = src;
+    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  };
+
+  window.setDuration = function(d) {
+    duration = d;
+    document.querySelectorAll('.dur-pill').forEach(p => {
+      p.classList.toggle('active', p.textContent.toLowerCase() === d);
+    });
+    document.getElementById('dur-unit-label').textContent = d + (d==='day'?'s':d==='month'?'s':'s');
+    calcTotal();
+  };
+
+  window.calcTotal = function() {
+    if (!listing || listing.type !== 'rent') return;
+    const qty = Math.max(1, parseInt(document.getElementById('dur-qty').value) || 1);
+    const rates = calculateRates(listing.hourlyRate || listing.priceRaw);
+    
+    let base = rates.hourly;
+    if (duration === 'day') base = rates.daily;
+    if (duration === 'month') base = rates.monthly;
+    
+    const total = base * qty;
+    document.getElementById('total-val').textContent = `₹${total.toLocaleString('en-IN')}`;
+  };
+
+  window.handleRequest = async function() {
+    if (!currentUser) {
+      showToast('Please sign in to send a request', 'info');
+      setTimeout(() => location.href = 'index.html', 1200);
+      return;
+    }
+    
+    if (currentUser.uid === listing.postedBy) {
+      showToast("You can't request your own item!", 'info');
+      return;
+    }
+
+    const btn = document.getElementById('req-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    try {
+      const qty = document.getElementById('dur-qty').value;
+      const totalStr = document.getElementById('total-val').textContent;
+      const durText = listing.type === 'rent' ? ` for ${qty} ${duration}(s)` : '';
+
+      await createRequest({
+        listingId,
+        listingTitle: listing.title,
+        fromUid:   currentUser.uid,
+        fromName:  currentUser.displayName || 'Someone',
+        fromPhoto: currentUser.photoURL || '',
+        toUid:     listing.postedBy,
+        duration:  listing.type === 'rent' ? `${qty} ${duration}(s)` : null,
+        totalPrice: totalStr,
+        createdAt: Date.now(),
+      });
+
+      await createNotification(listing.postedBy, {
+        text: `<strong>${currentUser.displayName || 'Someone'}</strong> requested "${listing.title}"${durText} (${totalStr})`,
+        listingId,
+        read:      false,
+        createdAt: Date.now(),
+      });
+
+      showToast('Request sent! The owner will be notified.', 'success');
+      btn.textContent = '✓ Request Sent';
+      btn.style.background = 'var(--green)';
+    } catch (err) {
+      console.error(err);
+      showToast('Error: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = '📩 Send Request';
+    }
+  };
+</script>
+
+<!-- character-watchers handled by core.js -->
+</body>
+</html>

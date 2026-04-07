@@ -1,0 +1,28 @@
+{
+  "rules": {
+    "listings": {
+      ".read": true,
+      "$listingId": {
+        ".write": "auth != null && (data.child('postedBy').val() === auth.uid || !data.exists())"
+      }
+    },
+    "requests": {
+      ".read": "auth != null",
+      "$requestId": {
+        ".write": "auth != null && (data.child('fromUid').val() === auth.uid || !data.exists())"
+      }
+    },
+    "notifications": {
+      "$uid": {
+        ".read":  "auth != null && auth.uid === $uid",
+        ".write": "auth != null"
+      }
+    },
+    "users": {
+      ".read":  "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    }
+  }
+}

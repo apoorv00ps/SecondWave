@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecondWave — List an Item</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .give-wrap { max-width: 680px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+    .give-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.6rem; margin-bottom: 1.2rem;
+    }
+    .panel-hdr {
+      font-size: 0.9rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 1.1rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .upload-progress {
+      background: var(--surface-3); border-radius: 99px; height: 6px; margin-top: 10px; overflow: hidden;
+    }
+    .upload-progress-bar {
+      height: 100%; background: var(--accent);
+      border-radius: 99px; transition: width 0.3s ease; width: 0%;
+    }
+    .submit-zone { text-align: center; padding: 1rem 0; }
+    .price-suffix {
+      position: absolute; right: 0.9rem; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: 0.82rem; pointer-events: none;
+    }
+    .price-wrap { position: relative; }
+  </style>
+</head>
+<body>
+<div id="auth-loader">
+  <div class="loader-ring"></div>
+  <span style="color:var(--muted);font-size:0.88rem;">Loading…</span>
+</div>
+
+<!-- Navbar -->
+<nav id="navbar">
+  <a href="marketplace.html" class="navbar-brand">Second<span>Wave</span></a>
+  <div class="navbar-actions">
+    <button class="nav-icon-btn" onclick="location.href='history.html'" title="History">🕐</button>
+    <button class="nav-icon-btn" id="signout-icon" title="Sign out">👤</button>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="give-wrap">
+
+    <div style="margin-bottom:1.8rem;">
+      <a href="marketplace.html" class="navbar-brand" style="color:var(--muted);font-size:0.85rem;">← Marketplace</a>
+      <h1 style="font-size:1.9rem;margin-top:0.5rem;">List an item</h1>
+      <p style="color:var(--muted);font-size:0.88rem;margin-top:0.3rem;">Fill in the details — the more you add, the faster it gets picked up. 🌿</p>
+    </div>
+
+    <!-- Step bar -->
+    <div class="step-bar" style="margin-bottom:2.2rem;">
+      <div class="step-dot active" id="sd1"><span>1</span><span class="step-label">Type</span></div>
+      <div class="step-line" id="sl1"></div>
+      <div class="step-dot" id="sd2"><span>2</span><span class="step-label">Category</span></div>
+      <div class="step-line" id="sl2"></div>
+      <div class="step-dot" id="sd3"><span>3</span><span class="step-label">Details</span></div>
+      <div class="step-line" id="sl3"></div>
+      <div class="step-dot" id="sd4"><span>4</span><span class="step-label">Location</span></div>
+      <div class="step-line" id="sl4"></div>
+      <div class="step-dot" id="sd5"><span>5</span><span class="step-label">Photos</span></div>
+    </div>
+
+    <!-- Step 1: Type -->
+    <div class="step-panel active" id="step-1">
+      <div class="give-panel">
+        <div class="panel-hdr">🔄 What are you doing?</div>
+        <div class="type-toggle">
+          <div class="type-card active-rent" id="tc-rent" onclick="setType('rent')">
+            <div class="type-icon">🔄</div>
+            <h3>For Rent</h3>
+            <p>Lend it out and earn something</p>
+          </div>
+          <div class="type-card" id="tc-sell" onclick="setType('sell')">
+            <div class="type-icon">🛒</div>
+            <h3>For Sale</h3>
+            <p>Sell it to someone who needs it</p>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:0.5rem;">
+        <button class="btn btn-primary" onclick="goStep(2)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Category -->
+    <div class="step-panel" id="step-2">
+      <div class="give-panel">
+        <div class="panel-hdr">📦 What category?</div>
+        <div class="cat-grid" id="cat-grid"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:0.5rem;">
+        <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-primary" onclick="validateCat()">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Details -->
+    <div class="step-panel" id="step-3">
+      <div class="give-panel">
+        <div class="panel-hdr">📝 Item details</div>
+        <div class="form-group">
+          <label class="form-label" for="f-title">Title *</label>
+          <input id="f-title" type="text" placeholder="e.g. Sony Camera A6400, Winter Jacket (L)" maxlength="90" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-desc">Description</label>
+          <textarea id="f-desc" placeholder="Condition, included accessories, any quirks to know about…" rows="4"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-price" id="price-label">Price per hour (₹) *</label>
+          <div class="price-wrap">
+            <input id="f-price" type="number" min="0" placeholder="e.g. 10" style="padding-right:2.5rem;" oninput="updatePricePreview(this.value)" />
+            <span class="price-suffix" id="price-suffix">/hr</span>
+          </div>
+          <div id="price-preview" style="font-size:0.8rem;color:var(--muted);margin-top:8px;display:none;background:var(--surface-2);padding:0.6rem;border-radius:var(--radius-sm);">
+            <span>Calculating…</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:0.5rem;">
+        <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
+        <button class="btn btn-primary" onclick="validateDetails()">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Location -->
+    <div class="step-panel" id="step-4">
+      <div class="give-panel">
+        <div class="panel-hdr">📍 Location</div>
+        <div class="form-group" style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:flex-end;">
+          <div>
+            <label class="form-label" for="f-location">Area / Address *</label>
+            <input id="f-location" type="text" placeholder="e.g. Koramangala, Bengaluru" oninput="onLocInput(this.value)" />
+          </div>
+          <button class="btn btn-outline" style="height:44px;flex-shrink:0;white-space:nowrap;" onclick="getGPS()">📡 Locate</button>
+        </div>
+        <div class="landmark-chips" id="landmark-chips"></div>
+
+        <div style="margin-top:1.2rem;">
+          <label class="form-label">Pickup radius</label>
+          <input type="range" id="f-radius" min="1" max="25" value="5" oninput="document.getElementById('radius-val').textContent=this.value+' km';" />
+          <div style="text-align:center;font-size:0.82rem;color:var(--accent);font-weight:600;margin-top:4px;" id="radius-val">5 km</div>
+        </div>
+
+        <div class="map-box" id="map-box" style="margin-top:1.2rem;">
+          <div class="map-box-icon">🗺️</div>
+          <span>Map preview appears after entering location</span>
+        </div>
+
+        <div class="form-group" style="margin-top:1rem;margin-bottom:0;">
+          <label class="form-label" for="f-landmark">Landmark (optional)</label>
+          <input id="f-landmark" type="text" placeholder="e.g. Near McDonald's, Opposite City Mall" />
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:0.5rem;">
+        <button class="btn btn-ghost" onclick="goStep(3)">← Back</button>
+        <button class="btn btn-primary" onclick="validateLocation()">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 5: Photos -->
+    <div class="step-panel" id="step-5">
+      <div class="give-panel">
+        <div class="panel-hdr">📸 Photos</div>
+        <div class="upload-zone" id="upload-zone"
+          onclick="document.getElementById('file-input').click()"
+          ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
+          <div class="upload-icon">📷</div>
+          <p>Drag &amp; drop photos or <strong>click to browse</strong></p>
+          <p style="margin-top:4px;font-size:0.78rem;">Up to 6 images · JPG, PNG, WebP</p>
+        </div>
+        <input type="file" id="file-input" accept="image/*" multiple style="display:none;" onchange="handleFiles(this.files)" />
+        <div class="img-preview-grid" id="preview-grid"></div>
+        <div class="upload-progress" id="upload-progress" style="display:none;">
+          <div class="upload-progress-bar" id="upload-progress-bar"></div>
+        </div>
+        <p id="upload-status" style="font-size:0.8rem;color:var(--muted);margin-top:6px;"></p>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:0.5rem;">
+        <button class="btn btn-ghost" onclick="goStep(4)">← Back</button>
+        <button class="btn btn-primary btn-lg" id="submit-btn" onclick="submitListing()">🌿 Post Listing</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Character watchers handled by core.js -->
+<script type="module">
+  import { 
+    requireAuth, signOutUser, createListing, uploadListingImages, calculateRates, formatPrice, CATEGORIES, showToast, db, app 
+  } from './core.js';
+  import { ref, push } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js';
+
+  let currentUser = null;
+  let selectedType     = 'rent';
+  let selectedCategory = null;
+  let uploadedFiles    = [];  // raw File objects for Firebase upload
+  let previewUrls      = [];  // local blob URLs for preview
+  let currentStep      = 1;
+
+  const LANDMARKS_DB = {
+    mumbai:    ['Near Churchgate', 'Opposite Inorbit', 'Near Station', 'Behind Market'],
+    bengaluru: ['Near Metro', 'Koramangala 5th Block', 'Near Forum Mall', 'Opposite NIMHANS'],
+    delhi:     ['Near Metro', 'CP Central', 'Lajpat Market', 'Near AIIMS'],
+    default:   ['Near Bus Stop', 'Opp. Railway Station', 'Near Market', 'Near School'],
+  };
+
+  // ── Auth guard ──────────────────────────────────────
+  requireAuth((user) => {
+    currentUser = user;
+    document.getElementById('auth-loader').style.display = 'none';
+    renderCatGrid();
+  });
+
+  document.getElementById('signout-icon').addEventListener('click', signOutUser);
+
+  // ── Step navigation ─────────────────────────────────
+  window.goStep = function(n) {
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('step-' + n).classList.add('active');
+
+    for (let i = 1; i <= 5; i++) {
+      const dot  = document.getElementById('sd' + i);
+      if (i < n)  { dot.classList.add('done');   dot.classList.remove('active'); }
+      else if (i === n) { dot.classList.add('active'); dot.classList.remove('done'); }
+      else        { dot.classList.remove('active','done'); }
+      if (i < 5) {
+        const line = document.getElementById('sl' + i);
+        line.classList.toggle('done', i < n);
+      }
+    }
+    currentStep = n;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // ── Step 1: Type ─────────────────────────────────────
+  window.setType = function(t) {
+    selectedType = t;
+    document.getElementById('tc-rent').className = 'type-card' + (t === 'rent' ? ' active-rent' : '');
+    document.getElementById('tc-sell').className = 'type-card' + (t === 'sell' ? ' active-sell' : '');
+    const priceLabel   = document.getElementById('price-label');
+    const priceSuffix  = document.getElementById('price-suffix');
+    const pricePreview = document.getElementById('price-preview');
+    
+    if (priceLabel)  priceLabel.textContent  = t === 'rent' ? 'Price per hour (₹) *' : 'Selling price (₹) *';
+    if (priceSuffix) priceSuffix.textContent = t === 'rent' ? '/hr' : '';
+    if (pricePreview) {
+      if (t === 'rent' && document.getElementById('f-price').value) {
+        updatePricePreview(document.getElementById('f-price').value);
+      } else {
+        pricePreview.style.display = 'none';
+      }
+    }
+  };
+
+  window.updatePricePreview = function(val) {
+    const previewEl = document.getElementById('price-preview');
+    if (selectedType !== 'rent' || !val || isNaN(val) || Number(val) <= 0) {
+      previewEl.style.display = 'none';
+      return;
+    }
+    const rates = calculateRates(val);
+    previewEl.style.display = 'block';
+    previewEl.innerHTML = `
+      <div style="margin-bottom:4px;">Auto-calculated long-term rates:</div>
+      <div style="display:flex;gap:12px;font-weight:600;">
+        <span title="Calculated as 15x hourly">📅 ${formatPrice(rates.daily, 'day')}</span>
+        <span title="Calculated as 10x daily">🗓️ ${formatPrice(rates.monthly, 'mo')}</span>
+      </div>
+    `;
+  };
+
+  // ── Step 2: Category ─────────────────────────────────
+  function renderCatGrid() {
+    const g = document.getElementById('cat-grid');
+    g.innerHTML = CATEGORIES.map(c => `
+      <div class="cat-item" id="ci-${c.id}" onclick="selectCat('${c.id}','${c.label}','${c.icon}')">
+        <div class="cat-icon">${c.icon}</div>
+        <span class="cat-label">${c.label}</span>
+      </div>
+    `).join('');
+  }
+
+  window.selectCat = function(id, label, icon) {
+    selectedCategory = { id, label, icon };
+    document.querySelectorAll('.cat-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('ci-' + id).classList.add('active');
+  };
+
+  window.validateCat = function() {
+    if (!selectedCategory) { showToast('Please select a category', 'error'); return; }
+    goStep(3);
+  };
+
+  // ── Step 3: Details validation ───────────────────────
+  window.validateDetails = function() {
+    const title = document.getElementById('f-title').value.trim();
+    const price = document.getElementById('f-price').value.trim();
+    if (!title) { showToast('Please enter a title', 'error'); return; }
+    if (!price || isNaN(price) || Number(price) < 0) { showToast('Please enter a valid price', 'error'); return; }
+    goStep(4);
+  };
+
+  // ── Step 4: Location ──────────────────────────────────
+  window.onLocInput = function(val) {
+    suggestLandmarks(val);
+    if (val.length > 3) {
+      const box = document.getElementById('map-box');
+      box.classList.add('located');
+      box.innerHTML = `<div class="map-box-icon">📍</div><span style="font-weight:600;">${val}</span>`;
+    }
+  };
+
+  function suggestLandmarks(val) {
+    const v = val.toLowerCase();
+    let key = 'default';
+    if (v.includes('mumbai') || v.includes('andheri') || v.includes('bandra')) key = 'mumbai';
+    else if (v.includes('bengaluru') || v.includes('bangalore') || v.includes('koramangala')) key = 'bengaluru';
+    else if (v.includes('delhi') || v.includes('lajpat') || v.includes('noida')) key = 'delhi';
+    const chips = LANDMARKS_DB[key];
+    document.getElementById('landmark-chips').innerHTML = chips.map(c =>
+      `<span class="landmark-chip" onclick="pickLandmark('${c}')">${c}</span>`
+    ).join('');
+  }
+
+  window.pickLandmark = function(l) {
+    document.getElementById('f-landmark').value = l;
+    document.querySelectorAll('.landmark-chip').forEach(ch => ch.classList.toggle('active', ch.textContent === l));
+  };
+
+  window.getGPS = function() {
+    if (!navigator.geolocation) { showToast('Geolocation not supported', 'error'); return; }
+    showToast('Getting your location…', 'info');
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const loc = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)} (GPS)`;
+        document.getElementById('f-location').value = loc;
+        onLocInput(loc);
+        showToast('Location captured 📍', 'success');
+      },
+      () => showToast('Could not get location. Enter manually.', 'error')
+    );
+  };
+
+  window.validateLocation = function() {
+    const loc = document.getElementById('f-location').value.trim();
+    if (!loc) { showToast('Please enter a location', 'error'); return; }
+    goStep(5);
+  };
+
+  // ── Step 5: Images ────────────────────────────────────
+  window.handleFiles = function(files) {
+    [...files].forEach(f => {
+      if (!f.type.startsWith('image/')) { showToast('Only image files allowed', 'error'); return; }
+      if (f.size > 8 * 1024 * 1024) { showToast('Max 8MB per image', 'error'); return; }
+      if (uploadedFiles.length >= 6) { showToast('Max 6 images', 'info'); return; }
+      uploadedFiles.push(f);
+      previewUrls.push(URL.createObjectURL(f));
+      renderPreview();
+    });
+  };
+
+  window.onDrag = function(e, over) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.toggle('dragging', over);
+  };
+
+  window.onDrop = function(e) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.remove('dragging');
+    handleFiles(e.dataTransfer.files);
+  };
+
+  function renderPreview() {
+    const g = document.getElementById('preview-grid');
+    g.innerHTML = previewUrls.map((url, i) => `
+      <div class="img-preview-item">
+        <img src="${url}" alt="Preview ${i+1}" />
+        <div class="img-preview-rm" onclick="removeImg(${i})">×</div>
+      </div>
+    `).join('');
+  }
+
+  window.removeImg = function(i) {
+    URL.revokeObjectURL(previewUrls[i]);
+    uploadedFiles.splice(i, 1);
+    previewUrls.splice(i, 1);
+    renderPreview();
+  };
+
+  // ── Submit ────────────────────────────────────────────
+  window.submitListing = async function() {
+    const title    = document.getElementById('f-title').value.trim();
+    const desc     = document.getElementById('f-desc').value.trim();
+    const priceVal = document.getElementById('f-price').value.trim();
+    const location = document.getElementById('f-location').value.trim();
+    const landmark = document.getElementById('f-landmark').value.trim();
+    const radius   = Number(document.getElementById('f-radius').value);
+
+    // Final safety check
+    if (!title || !priceVal || !location || !selectedCategory) {
+      showToast('Please fill all required fields', 'error');
+      return;
+    }
+
+    const price = Number(priceVal);
+    const btn = document.getElementById('submit-btn');
+    
+    // UI feedback based on images
+    btn.disabled = true;
+    btn.textContent = uploadedFiles.length > 0 ? 'Uploading images…' : 'Posting listing…';
+
+    try {
+      // 1. Generate the ID once, to be used everywhere
+      const listingId = push(ref(db, 'listings')).key;
+
+      // 2. Upload images to Firebase Storage
+      let imageUrls = [];
+      if (uploadedFiles.length > 0) {
+        const progressEl  = document.getElementById('upload-progress');
+        const progressBar = document.getElementById('upload-progress-bar');
+        const statusEl    = document.getElementById('upload-status');
+        progressEl.style.display = 'block';
+
+        try {
+          imageUrls = await uploadListingImages(listingId, uploadedFiles, (done, total) => {
+            progressBar.style.width = Math.round((done / total) * 100) + '%';
+            statusEl.textContent = `Uploading ${done} of ${total}…`;
+          });
+          statusEl.textContent = 'Upload complete! Finalizing…';
+        } catch (uploadErr) {
+          console.error('Photo upload failed:', uploadErr);
+          showToast(`Oops! Photo upload failed: ${uploadErr.message}`, 'error');
+          btn.disabled = false;
+          btn.textContent = '🌿 Post Listing';
+          progressEl.style.display = 'none';
+          return; // Stop execution
+        }
+      }
+
+      // 3. Format price string
+      const rates = calculateRates(price);
+      const priceStr = selectedType === 'rent' ? formatPrice(price, 'hr') : formatPrice(price);
+
+      // 4. Create listing in RTDB
+      await createListing({
+        id: listingId,
+        title,
+        description: desc,
+        price:       priceStr,
+        priceRaw:    price,
+        hourlyRate:  selectedType === 'rent' ? price : null,
+        dailyRate:   selectedType === 'rent' ? rates.daily : null,
+        monthlyRate: selectedType === 'rent' ? rates.monthly : null,
+        category:    selectedCategory.label,
+        categoryId:  selectedCategory.id,
+        emoji:       selectedCategory.icon,
+        type:        selectedType,
+        location,
+        radius,
+        landmark,
+        status:      'available',
+        images:      imageUrls,
+        postedBy:    currentUser.uid,
+        posterName:  currentUser.displayName || 'Anonymous',
+        posterPhoto: currentUser.photoURL || '',
+        createdAt:   Date.now(),
+      });
+
+      showToast('🌿 Listed successfully!', 'success');
+      btn.textContent = '✓ Done';
+      setTimeout(() => { window.location.href = 'marketplace.html'; }, 900);
+    } catch (err) {
+      console.error('Finalizing listing failed:', err);
+      showToast('Error: ' + err.message, 'error');
+      btn.disabled = false; 
+      btn.textContent = '🌿 Post Listing';
+      const progressEl = document.getElementById('upload-progress');
+      if (progressEl) progressEl.style.display = 'none';
+    }
+  };
+</script>
+
+<div id="watcher-row" aria-hidden="true">
+  <div class="watcher">
+    <svg viewBox="0 0 110 66" width="148" height="90" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+      <ellipse cx="55" cy="66" rx="52" ry="52" fill="#4a9b7f"/>
+      <ellipse cx="38" cy="28" rx="11" ry="7" fill="rgba(255,255,255,0.14)" transform="rotate(-20,38,28)"/>
+      <circle cx="33" cy="43" r="11" fill="white"/>
+      <circle cx="33" cy="43" r="6.5" fill="#1c1814" data-pupil data-eye-cx="33" data-eye-cy="43" data-max-offset="4.5"/>
+      <circle cx="36" cy="40" r="2" fill="rgba(255,255,255,0.7)"/>
+      <rect x="52" y="33" width="24" height="17" rx="4" fill="white"/>
+      <rect x="57" y="37" width="14" height="10" rx="2" fill="#1c1814" data-pupil data-pupil-type="rect" data-base-x="57" data-base-y="37" data-eye-cx="64" data-eye-cy="41.5" data-max-offset="4"/>
+      <rect x="72" y="34" width="3" height="2" rx="1" fill="rgba(255,255,255,0.7)"/>
+    </svg>
+  </div>
+  <div class="watcher">
+    <svg viewBox="0 0 100 100" width="130" height="130" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+      <circle cx="50" cy="50" r="47" fill="#e07840"/>
+      <ellipse cx="34" cy="26" rx="13" ry="9" fill="rgba(255,255,255,0.14)" transform="rotate(-25,34,26)"/>
+      <circle cx="33" cy="46" r="12" fill="white"/>
+      <circle cx="33" cy="46" r="7" fill="#1c1814" data-pupil data-eye-cx="33" data-eye-cy="46" data-max-offset="4.5"/>
+      <circle cx="37" cy="42" r="2.5" fill="rgba(255,255,255,0.7)"/>
+      <rect x="52" y="35" width="22" height="17" rx="4" fill="white"/>
+      <rect x="56" y="39" width="14" height="10" rx="2" fill="#1c1814" data-pupil data-pupil-type="rect" data-base-x="56" data-base-y="39" data-eye-cx="63" data-eye-cy="44" data-max-offset="3.5"/>
+    </svg>
+  </div>
+  <div class="watcher">
+    <svg viewBox="0 0 100 92" width="115" height="106" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+      <polygon points="50,4 4,92 96,92" fill="#d4a843"/>
+      <polygon points="50,4 38,36 62,36" fill="rgba(255,255,255,0.13)"/>
+      <circle cx="34" cy="70" r="11" fill="white"/>
+      <circle cx="34" cy="70" r="6.5" fill="#1c1814" data-pupil data-eye-cx="34" data-eye-cy="70" data-max-offset="4"/>
+      <circle cx="38" cy="66" r="2" fill="rgba(255,255,255,0.7)"/>
+      <rect x="53" y="61" width="20" height="15" rx="3" fill="white"/>
+      <rect x="57" y="65" width="12" height="8" rx="2" fill="#1c1814" data-pupil data-pupil-type="rect" data-base-x="57" data-base-y="65" data-eye-cx="63" data-eye-cy="69" data-max-offset="3.5"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Character watchers handled by core.js -->
+</body>
+</html>

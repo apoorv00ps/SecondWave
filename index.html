@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecondWave — Share What You Don't Need</title>
+  <meta name="description" content="Rent or sell things you have, find things you need." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="landing-body">
+
+<div class="login-split">
+
+  <!-- ══════════════════════════════════════
+       LEFT PANEL: Characters + Brand
+       ══════════════════════════════════════ -->
+  <div class="char-left-panel">
+    <!-- Brand at top -->
+    <div>
+      <div class="char-panel-brand">Second<span>Wave</span></div>
+      <div class="char-panel-tagline">share · borrow · connect</div>
+    </div>
+
+    <!-- Quote in middle -->
+    <div class="char-panel-quote">
+      "Everything has a second&nbsp;life<br/>with the right person."
+    </div>
+
+    <!-- 3 Characters standing on the ground -->
+    <div class="char-floor-wrap" aria-hidden="true">
+      <div class="char-floor-row">
+
+        <!-- DOME (green semi-circle) -->
+        <div class="watcher">
+          <svg viewBox="0 0 110 66" width="148" height="90" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+            <ellipse cx="55" cy="66" rx="52" ry="52" fill="#4a9b7f"/>
+            <ellipse cx="38" cy="28" rx="11" ry="7" fill="rgba(255,255,255,0.14)" transform="rotate(-20,38,28)"/>
+            <circle cx="33" cy="43" r="11" fill="white"/>
+            <circle cx="33" cy="43" r="6.5" fill="#1c1814" data-pupil data-eye-cx="33" data-eye-cy="43" data-max-offset="4.5"/>
+            <circle cx="36" cy="40" r="2" fill="rgba(255,255,255,0.7)"/>
+            <rect x="52" y="33" width="24" height="17" rx="4" fill="white"/>
+            <rect x="57" y="37" width="14" height="10" rx="2" fill="#1c1814" data-pupil data-pupil-type="rect" data-base-x="57" data-base-y="37" data-eye-cx="64" data-eye-cy="41.5" data-max-offset="4"/>
+            <rect x="72" y="34" width="3" height="2" rx="1" fill="rgba(255,255,255,0.7)"/>
+          </svg>
+        </div>
+
+        <!-- BALL (terracotta circle) -->
+        <div class="watcher">
+          <svg viewBox="0 0 100 100" width="130" height="130" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+            <circle cx="50" cy="50" r="47" fill="#e07840"/>
+            <ellipse cx="34" cy="26" rx="13" ry="9" fill="rgba(255,255,255,0.14)" transform="rotate(-25,34,26)"/>
+            <circle cx="33" cy="46" r="12" fill="white"/>
+            <circle cx="33" cy="46" r="7" fill="#1c1814" data-pupil data-eye-cx="33" data-eye-cy="46" data-max-offset="4.5"/>
+            <circle cx="37" cy="42" r="2.5" fill="rgba(255,255,255,0.7)"/>
+            <rect x="52" y="35" width="22" height="17" rx="4" fill="white"/>
+            <rect x="56" y="39" width="14" height="10" rx="2" fill="#1c1814" data-pupil data-pupil-type="rect" data-base-x="56" data-base-y="39" data-eye-cx="63" data-eye-cy="44" data-max-offset="3.5"/>
+          </svg>
+        </div>
+
+        <!-- CONE (gold triangle) -->
+        <div class="watcher">
+          <svg viewBox="0 0 100 92" width="115" height="106" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+            <polygon points="50,4 4,92 96,92" fill="#d4a843"/>
+            <polygon points="50,4 38,36 62,36" fill="rgba(255,255,255,0.13)"/>
+            <circle cx="34" cy="70" r="11" fill="white"/>
+            <circle cx="34" cy="70" r="6.5" fill="#1c1814" data-pupil data-eye-cx="34" data-eye-cy="70" data-max-offset="4"/>
+            <circle cx="38" cy="66" r="2" fill="rgba(255,255,255,0.7)"/>
+            <rect x="53" y="61" width="20" height="15" rx="3" fill="white"/>
+            <rect x="57" y="65" width="12" height="8" rx="2" fill="#1c1814" data-pupil data-pupil-type="rect" data-base-x="57" data-base-y="65" data-eye-cx="63" data-eye-cy="69" data-max-offset="3.5"/>
+          </svg>
+        </div>
+
+      </div>
+      <div class="char-ground"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       RIGHT PANEL: Login content — centered
+       ══════════════════════════════════════ -->
+  <div class="login-right-panel">
+    <div class="login-content fade-up">
+
+      <p class="hero-kicker">A human marketplace</p>
+      <h1 class="hero-title">
+        Things you have.<br/>People who <em>need</em> them.
+      </h1>
+      <p class="hero-body">
+        SecondWave connects neighbours — no middlemen, no clutter.
+        Rent out your camera, sell the jacket you never wear, or find exactly what you need nearby.
+      </p>
+
+      <p id="auth-loading-msg" style="color:var(--muted);font-size:0.82rem;margin-top:0.5rem;display:none;">Checking sign-in…</p>
+
+      <div class="login-ctas">
+        <button class="google-btn" id="google-btn">
+          <svg viewBox="0 0 48 48">
+            <path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Sign in with Google
+        </button>
+        <button class="browse-btn" id="browse-btn">Browse without signing in →</button>
+      </div>
+
+      <!-- Category pills -->
+      <div class="cat-preview-row" id="cat-pills">
+        <!-- filled by JS -->
+      </div>
+
+      <p style="font-size:0.75rem;color:var(--muted);margin-top:1.8rem;line-height:1.5;">
+        🌿 Real listings · Zero commission · Your community
+      </p>
+
+    </div>
+  </div>
+</div>
+
+<!-- UI eye-animations handled by core.js -->
+<script type="module">
+  import { signInWithGoogle, onAuth, saveUser, CATEGORIES, showToast } from './core.js';
+
+  // Category pills
+  const pillsEl = document.getElementById('cat-pills');
+  if (pillsEl) {
+    pillsEl.innerHTML = CATEGORIES.map(c =>
+      `<span class="cat-preview-pill">${c.icon} ${c.label}</span>`
+    ).join('');
+  }
+
+  const loadingMsg = document.getElementById('auth-loading-msg');
+  loadingMsg.style.display = 'block';
+
+  onAuth(async (user) => {
+    loadingMsg.style.display = 'none';
+    if (user) window.location.href = 'marketplace.html';
+  });
+
+  document.getElementById('google-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('google-btn');
+    try {
+      btn.disabled = true; btn.textContent = 'Signing in…';
+      const user = await signInWithGoogle();
+      await saveUser(user.uid, { name: user.displayName, email: user.email, photoURL: user.photoURL, createdAt: Date.now() });
+      window.location.href = 'marketplace.html';
+    } catch (err) {
+      showToast('Sign-in failed: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 48 48" style="width:20px;height:20px"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Sign in with Google`;
+    }
+  });
+
+  document.getElementById('browse-btn').addEventListener('click', () => {
+    window.location.href = 'marketplace.html?guest=1';
+  });
+</script>
+<!-- Eye-followed characters initialized via core.js -->
+</body>
+</html>
